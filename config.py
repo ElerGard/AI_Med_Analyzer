@@ -4,8 +4,6 @@ class LLM_Settings:
     LLM1_NAME = "gemma-3-27b-it-qat"
     LLM2_NAME = "qwen3-30b-a3b"
     TEMPERATURE = 0.1
-    LLM_FOR_COMPARE = LLM2_NAME
-    NO_THINKING = True
 
 class IACP_Settings:
     TITLE = "Testi"
