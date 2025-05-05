@@ -1,0 +1,6 @@
+datasets
+torch
+transformers
+trl
+unsloth
+huggingface_hub
