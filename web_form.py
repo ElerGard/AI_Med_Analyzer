@@ -38,21 +38,29 @@ def process_file(uploaded_file):
     placeholder.progress(50, "Файл в обработке...")
 
     llm1, llm2, anamnez = lp.parsing_anamnez(bytes_data.decode("utf-8"))
+    if anamnez == "":
+        placeholder.markdown("Не удалось извлечь анамнез жизни. Попробуйте другой файл")
+    else:
+        llm1 = llm1.replace("```json", "").replace("```", "")
+        try:
+            result_json_1 = ti.main(llm1, file_base_name)
+        except:
+            result_json_1 = {"ОШИБКА": "Не удалось обработать универсальный json для LLM 1"}
+        placeholder.progress(70, "Файл в обработке...")
+        try:
+            result_json_2 = ti.main(llm2, file_base_name)
+        except:
+            result_json_2 = {"ОШИБКА": "Не удалось обработать универсальный json для LLM 2"}
+        placeholder.progress(90, "Файл в обработке...")
+        st.session_state.processing_results = {
+            'llm1': llm1,
+            'llm2': llm2,
+            'anamnez': anamnez,
+            'result_json_1': result_json_1,
+            'result_json_2': result_json_2
+        }
 
-    llm1 = llm1.replace("```json", "").replace("```", "")
-    result_json_1 = ti.main(llm1, file_base_name)
-    placeholder.progress(70, "Файл в обработке...")
-    result_json_2 = ti.main(llm2, file_base_name)
-    placeholder.progress(90, "Файл в обработке...")
-    st.session_state.processing_results = {
-        'llm1': llm1,
-        'llm2': llm2,
-        'anamnez': anamnez,
-        'result_json_1': result_json_1,
-        'result_json_2': result_json_2
-    }
-
-    st.session_state.uploaded_file = uploaded_file
+        st.session_state.uploaded_file = uploaded_file
 
 def clear_state():
     st.session_state.uploaded_file = None
@@ -92,29 +100,31 @@ if results['result_json_1'] != "" or results['result_json_2'] != "":
         st.subheader("JSON 2")
         st.json(results['result_json_2'], expanded=False)
 
-    with st.expander("Сравнение JSON", expanded=False):
-        if 'compare_json' not in st.session_state:
-            st.session_state.compare_json = cjson.compare_json(results['result_json_1'], results['result_json_2'])
-        st.markdown(st.session_state.compare_json.replace("```markdown", "").replace("```", ""), unsafe_allow_html=True)
-        placeholder.progress(100, "Файл в обработке...")
-        placeholder.markdown(st.session_state.processing_results['anamnez'])
+    if (results['result_json_1'] != {"ОШИБКА": "Не удалось обработать универсальный json для LLM 1"} or
+        results['result_json_2'] != {"ОШИБКА": "Не удалось обработать универсальный json для LLM 2"}):
+        with st.expander("Сравнение JSON", expanded=False):
+            if 'compare_json' not in st.session_state:
+                st.session_state.compare_json = cjson.compare_json(results['result_json_1'], results['result_json_2'])
+            st.markdown(st.session_state.compare_json.replace("```markdown", "").replace("```", ""), unsafe_allow_html=True)
+            placeholder.progress(100, "Файл в обработке...")
+            placeholder.markdown(st.session_state.processing_results['anamnez'])
 
-    col3, col4 = st.columns([2, 2], gap="medium")
+        col3, col4 = st.columns([2, 2], gap="medium")
 
-    with col3:
-        st.download_button(
-            label="Download json 1",
-            data=json.dumps(results['result_json_1'], ensure_ascii=False, indent=2),
-            file_name="result_llm1.json",
-            mime="application/json",
-            key="download_llm1"
-        )
+        with col3:
+            st.download_button(
+                label="Download json 1",
+                data=json.dumps(results['result_json_1'], ensure_ascii=False, indent=2),
+                file_name="result_llm1.json",
+                mime="application/json",
+                key="download_llm1"
+            )
 
-    with col4:
-        st.download_button(
-            label="Download json 2",
-            data=json.dumps(results['result_json_2'], ensure_ascii=False, indent=2),
-            file_name="result_llm2.json",
-            mime="application/json",
-            key="download_llm2"
-        )
+        with col4:
+            st.download_button(
+                label="Download json 2",
+                data=json.dumps(results['result_json_2'], ensure_ascii=False, indent=2),
+                file_name="result_llm2.json",
+                mime="application/json",
+                key="download_llm2"
+            )

@@ -57,8 +57,10 @@ def process_directory(text):
 
 def parsing_anamnez(text):
     file_path = "data/template.json"
-    input_text = process_directory(text)
-
+    try:
+        input_text = process_directory(text)
+    except:
+        return "", "", ""
     client = OpenAI(base_url=LLM_Settings.BASE_URL, api_key=LLM_Settings.API_KEY)
 
     with open(file_path, "r", encoding="utf-8") as file:
