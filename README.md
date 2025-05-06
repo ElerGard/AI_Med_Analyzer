@@ -28,6 +28,23 @@ cd AI_Med_Analyzer
 pip install -r requirements.txt
 ```
 
+Чтобы у вас правильно сформировался json для платформы IACPaaS, необходимо заполнить `config.py`
+
+```python
+class LLM_Settings:
+    BASE_URL = "Адрес для openai к моделям"
+    API_KEY = "Ключ для api lm-studio, ollama или другие"
+    LLM1_NAME = "Название первой модели" 
+    LLM2_NAME = "Название второй модели"
+    TEMPERATURE = "Параметр температуры, задаётся числом"
+
+class IACP_Settings:
+    TITLE = "Название графа на платформе IACPaaS" 
+    PATH = 'Путь к графу на платформе IACPaaS, должен заканчиваться тем же термином что и в TITLE'
+    ONTOLOGY_PATH = 'Путь где лежит онтология электронной медицинской карты V.4 - Практика 2025 для графа'
+    TERMS_PATH = 'Путь к базе терминов куда будут идти сслыки на уже существующие термины'
+```
+
 После этого необходимо запустить 2 скрипта для создания: 
 1. Шаблона универсального json на основе базы терминов - `convert_term_to_json.py`
 2. Файла с путями для ссылок - `extract_terms.py`
@@ -170,8 +187,6 @@ streamlit run web_form.py
 ![Основное окно](./git_images/upload_file.gif)
 
 </details>
-
-## Демонстрация работы
 
 ## Примечания
 
