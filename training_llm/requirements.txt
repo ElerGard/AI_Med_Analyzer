@@ -1,6 +1,5 @@
-datasets
-torch
-transformers
-trl
-unsloth
-huggingface_hub
+datasets==3.5.0
+transformers==4.51.2
+trl==0.15.2
+unsloth==2025.4.1
+huggingface_hub==0.30.2
