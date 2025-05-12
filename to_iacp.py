@@ -9,12 +9,16 @@ with open('data/term.txt', 'r', encoding='utf-8') as f:
 
 def find_original_path(name, parent_name=None, value=None):
     search_terms = []
+    # if name == 'аллергия отсутствует':
+    #     print(1)
+
+    if name in ['Качественные значения', 'Числовые значения', 'Составные значения'] and value is None:
+        return None
 
     if value:
         search_terms.append(f"/{value};")
-    if parent_name:
-        search_terms.append(f"/{parent_name};")
-    search_terms.append(f"/{name};")
+    else:
+        search_terms.append(f"/{name};")
 
 
     for term in terminology:
@@ -64,8 +68,8 @@ def transform_value(value, parent_name=None, name=None):
 
 
 def transform_node(key, value, parent_key=None, is_special_section=False, is_fact=False):
-    # if key == 'Наличие аллергии':
-    #     print(1)
+    if key == 'Наличие аллергии':
+        print(1)
     if is_special_section or key == 'Качественные значения' or key == 'Числовые значения':
         meta = key
         is_fact = False
@@ -307,7 +311,7 @@ def transform_json(input_json, filename):
 
 def main(input_json=None, filename=""):
     if not input_json:
-        input_json = { # Для теста
+        input_json = {
           "Сопутствующие и хронические заболевания": [
             {
               "Вирусные гепатиты": "отрицает",
@@ -317,13 +321,13 @@ def main(input_json=None, filename=""):
           ],
           "Перенесенные заболевания, травмы, операции": [
             {
-              "Операции": {
-                "Качественные значения": ["АКШ 2001г", "Холецистэктомия 2008г", "ТЛБАП со стентированием 2014г", "Секторальная резекция молочной железы справа 1982г"]
-              },
               "Заболевания": {
-                "Качественные значения": []
+                "Качественные значения": ["ЯБЖ", "ремиссия"]
               },
               "Травмы": {
+                "Качественные значения": []
+              },
+              "операции": {
                 "Качественные значения": []
               }
             }
@@ -332,25 +336,29 @@ def main(input_json=None, filename=""):
             {
               "Наличие аллергии": [
                 {
-                  "Качественные значения": ["аллергия отсутствует"],
-                  "Числовые значения": []
+                  "Качественные значения": ["аллергия отсутствует"]
                 }
               ]
             }
           ],
-          "Наследственный анамнез": [
+          "Вредные привычки": [
             {
-              "Наличие заболевания у матери": [
+              "Курение": [
                 {
-                  "Заболевание": {
-                    "Качественные значения": [],
+                  "Присутствие": {
+                    "Качественные значения": ["имеется"],
                     "Числовые значения": []
+                  },
+                  "Количество (штук в день)": {
+                    "Качественные значения": [],
+                    "Числовые значения": [1.0]
                   }
                 }
               ]
             }
           ]
         }
+
 
 
     else:
@@ -366,4 +374,4 @@ def main(input_json=None, filename=""):
     return output_json
 
 if __name__ == "__main__":
-    main()
+    print(main())
