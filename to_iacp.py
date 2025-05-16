@@ -7,7 +7,7 @@ with open('data/term.txt', 'r', encoding='utf-8') as f:
     terminology = [line.strip() for line in f.readlines()]
 
 
-def find_original_path(name, parent_name=None, value=None):
+def find_original_path(name, parent_name=None, value=None, root_name=None):
     search_terms = []
     # if name == 'аллергия отсутствует':
     #     print(1)
@@ -16,6 +16,11 @@ def find_original_path(name, parent_name=None, value=None):
         return None
 
     if value:
+        try:
+            value = float(value)
+            return None
+        except ValueError:
+            pass
         search_terms.append(f"/{value};")
     else:
         search_terms.append(f"/{name};")
@@ -24,12 +29,17 @@ def find_original_path(name, parent_name=None, value=None):
     for term in terminology:
         for search_term in search_terms:
             if search_term in term:
-                return term
+                if value == 'нет' and 'Курение' not in term:
+                    return None
+                if parent_name is not None and parent_name.lower() in term.lower():
+                    return term
+                # return term
             elif not value:
                 match = re.search(rf'^(.*?)/{name};', term)
                 if match:
                     result = match.group(1) + f"/{name};"
                     return result
+
     return None
 
 
@@ -37,7 +47,7 @@ def generate_id():
     return int(str(uuid.uuid4().int)[:16])
 
 
-def transform_value(value, parent_name=None, name=None):
+def transform_value(value, parent_name=None, name=None, root_name=None):
     if isinstance(value, (str, int, float)):
         node = {
             "id": generate_id(),
@@ -68,13 +78,13 @@ def transform_value(value, parent_name=None, name=None):
 
 
 def transform_node(key, value, parent_key=None, is_special_section=False, is_fact=False):
-    if key == 'Наличие аллергии':
-        print(1)
+    # if key == 'Онкологический анамнез':
+    #     print(1)
     if is_special_section or key == 'Качественные значения' or key == 'Числовые значения':
         meta = key
         is_fact = False
     else:
-        meta = "Характеристика" if not is_fact else "Факт"
+        meta = "Характеристика" if (not is_fact) and parent_key is not None else "Факт"
     node = {
         "id": generate_id(),
         "name": key,
@@ -84,7 +94,7 @@ def transform_node(key, value, parent_key=None, is_special_section=False, is_fac
     }
 
     if is_fact:
-        original = find_original_path(key, parent_key)
+        original = find_original_path(key, parent_key, root_name=key if is_special_section else None)
         if original:
             node[
                 "original"] = IACP_Settings.TERMS_PATH + original
@@ -107,7 +117,7 @@ def transform_node(key, value, parent_key=None, is_special_section=False, is_fac
                 if isinstance(v, list):
                     for item in v:
                         if isinstance(item, (str, int, float)):
-                            term_node = transform_value(item, key, k)
+                            term_node = transform_value(item, key, k, root_name=key if is_special_section else None)
                             if term_node:
                                 values_node["successors"].append(term_node)
 
@@ -133,7 +143,7 @@ def transform_node(key, value, parent_key=None, is_special_section=False, is_fac
                             "name": "Качественные значения",
                             "type": "НЕТЕРМИНАЛ",
                             "meta": "Качественные значения",
-                            "successors": [transform_value(v, key, k)]
+                            "successors": [transform_value(v, key, k, root_name=key if is_special_section else None)]
                         }
                         node["successors"].append(qual_node)
                     else:
@@ -149,11 +159,11 @@ def transform_node(key, value, parent_key=None, is_special_section=False, is_fac
                         "name": "Качественные значения",
                         "type": "НЕТЕРМИНАЛ",
                         "meta": "Качественные значения",
-                        "successors": [transform_value(item, parent_key, key)]
+                        "successors": [transform_value(item, parent_key, key, root_name=parent_key if is_special_section else None)]
                     }
                     node["successors"].append(qual_node)
                 else:
-                    term_node = transform_value(item, parent_key, key)
+                    term_node = transform_value(item, parent_key, key, root_name=parent_key if is_special_section else None)
                     if term_node:
                         node["successors"].append(term_node)
     elif isinstance(value, (str, int, float)):
@@ -163,11 +173,11 @@ def transform_node(key, value, parent_key=None, is_special_section=False, is_fac
                 "name": "Качественные значения",
                 "type": "НЕТЕРМИНАЛ",
                 "meta": "Качественные значения",
-                "successors": [transform_value(value, parent_key, key)]
+                "successors": [transform_value(value, parent_key, key, root_name=parent_key if is_special_section else None)]
             }
             node["successors"].append(qual_node)
         else:
-            term_node = transform_value(value, parent_key, key)
+            term_node = transform_value(value, parent_key, key, root_name=parent_key if is_special_section else None)
             if term_node:
                 node["successors"].append(term_node)
 
@@ -310,7 +320,7 @@ def transform_json(input_json, filename):
 
 
 def main(input_json=None, filename=""):
-    if not input_json:
+    if input_json is None:
         input_json = {
           "Сопутствующие и хронические заболевания": [
             {

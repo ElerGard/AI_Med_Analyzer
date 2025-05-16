@@ -4,7 +4,7 @@ import os
 import streamlit as st
 import llm_parsing as lp
 import to_iacp as ti
-import compare_json as cjson
+import comaper_json_v2 as cjson
 from config import LLM_Settings
 
 st.set_page_config(layout="wide")
@@ -48,7 +48,9 @@ def process_file(uploaded_file):
             result_json_1 = {"ОШИБКА": "Не удалось обработать универсальный json для LLM 1"}
         placeholder.progress(70, "Файл в обработке...")
         try:
+            print(f"-----LLM2 {llm2}--------")
             result_json_2 = ti.main(llm2, file_base_name)
+            print(f"-----result_json_2 {result_json_2}--------")
         except:
             result_json_2 = {"ОШИБКА": "Не удалось обработать универсальный json для LLM 2"}
         placeholder.progress(90, "Файл в обработке...")
@@ -104,7 +106,7 @@ if results['result_json_1'] != "" or results['result_json_2'] != "":
         results['result_json_2'] != {"ОШИБКА": "Не удалось обработать универсальный json для LLM 2"}):
         with st.expander("Сравнение JSON", expanded=False):
             if 'compare_json' not in st.session_state:
-                st.session_state.compare_json = cjson.compare_json(results['result_json_1'], results['result_json_2'])
+                st.session_state.compare_json = cjson.compare_jsons(json.loads(results['llm1']), json.loads(results['llm2']))
             st.markdown(st.session_state.compare_json.replace("```markdown", "").replace("```", ""), unsafe_allow_html=True)
             placeholder.progress(100, "Файл в обработке...")
             placeholder.markdown(st.session_state.processing_results['anamnez'])

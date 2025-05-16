@@ -36,8 +36,6 @@ CUDA 12.8
 pip install --pre torch torchvision torchaudio --index-url https://download.pytorch.org/whl/nightly/cu128
 ```
 
-
-
 ### Установка
 ```bash
 git clone https://github.com/ElerGard/AI_Med_Analyzer.git
